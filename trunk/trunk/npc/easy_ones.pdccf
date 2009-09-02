@@ -1,0 +1,31 @@
+*Slug
+image=280
+speed=200
+ai=ChasePlayerAI
+name=Slug
+natural_av=30
+        
+*FloatingEye
+image=135
+speed=450
+ai=ChasePlayerAI
+name=Floating Eye
+
+*PurpleFungus
+image=145
+speed=600
+ai=ChasePlayerAI
+name=Purple Fungus
+
+*BlueFungus
+image=146
+speed=600
+ai=ChasePlayerAI
+name=Blue Fungus
+
+*BrownPudding
+image=147
+speed=600
+ai=ChasePlayerAI
+name=Brown Pudding 
+
