@@ -57,7 +57,6 @@ else:
 
 
 quit_mes = game.start()
-print quit_mes
 
 if quit_mes == SAVE:
     data = game 

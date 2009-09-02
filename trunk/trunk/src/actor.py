@@ -6,12 +6,12 @@ import pygame
 
 class Actor(object):
     
-    tiles = Res('dc-mon.png', TILESIZE)
+    tiles = None
     game = None
     
-    def __init__(self):
+    def __init__(self, add):
         Debug.debug('Creating Actor')
-        self.game.actors.append(self)
+        if add: self.game.actors.append(self)
         self.name = 'Generic Actor'
         self.cur_surf = None
         self.img_body = None
@@ -44,6 +44,12 @@ class Actor(object):
         self.cur_mind = 100
         self.health = 30
         self.cur_health = 30
+
+        self.check_tiles()
+
+    def check_tiles(self):
+        if Actor.tiles == None:
+            Actor.tiles = Res('dc-mon.png', TILESIZE)
     
     def die(self):
         self.game.actors.remove(self)
@@ -64,6 +70,9 @@ class Actor(object):
         return self.left.max_damage + self.cur_strength / 75
 
     def get_tile(self):
+         
+        self.check_tiles()
+        
         surf = pygame.Surface((TILESIZE, TILESIZE), pygame.SRCALPHA, 32)        
         
         surf.blit(self.cloak.get_eq_img(), (0, 0))
@@ -77,6 +86,10 @@ class Actor(object):
         surf.blit(self.head.get_eq_img(), (TILESIZE / 4, 0))
         
         return surf
+
+    def set_pos(self, pos):
+        self.x = pos[0]
+        self.y = pos[1]
 
     def tick(self):
         if self.cur_endurance < self.endurance:
@@ -136,18 +149,21 @@ class Actor(object):
             return True
         
         return False
-    
-class Player(Actor):
-    
-    tiles = Res('dc-pl.png', TILESIZE)
 
-    def __init__(self):
-        Actor.__init__(self)
+class Humanoid(Actor):
+    
+    tiles = None
+
+    def __init__(self,add):
+        Actor.__init__(self,add)
+        self.check_tiles()
         self.img_body = 1, 0
-        self.img_armor = 121, 1
-        self.img_feet = 75, 3
-       # self.img_neck = 125, 2
-        self.img_right = 232, 1
-        self.img_left = 187, 1
-        self.img_head = 281, 8
         self.name = 'Player'
+
+    def check_tiles(self):
+        if Humanoid.tiles == None:
+            Humanoid.tiles = Res('dc-pl.png', TILESIZE)
+
+    def get_tile(self):
+        self.check_tiles()
+        return Actor.get_tile(self) 

@@ -9,25 +9,30 @@ testmap = [
          [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
          [1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
          [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-         [1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1],
-         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, - 1, -1, -1, -1, -1, -1, -1, -1],
-         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, - 1, -1, -1, -1, -1, -1, -1, -1],
-         [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, - 1, -1, -1, -1, -1, -1, -1, -1],
-         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, - 1, -1, -1, -1, -1, -1, -1, -1],
-         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, - 1, -1, -1, -1, -1, -1, -1, -1],
-         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, - 1, -1, -1, -1, -1, -1, -1, -1],
-         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, - 1, -1, -1, -1, -1, -1, -1, -1]]
+         [1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 9, 9, 9, 9, 9, 9, 9, 9],
+         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9, 9, 9, 9, 9, 9, 9]]
 
 
 class Map(object):
     
-    tiles = Res('dc-dngn.png', TILESIZE)
+    tiles = None
     game = None
     
     def __init__(self, MapArray):
         self.map_array = []
-        
-        
+
         for line in MapArray:
             new_line = []
             for tile in line:
@@ -39,13 +44,19 @@ class Map(object):
         self.width = len(MapArray[0])
         self.cur_surf = None
         Debug.debug('Map is ' + str(self.width) + 'x' + str(self.height))
+
+    def check_tiles(self):
+        if Map.tiles == None:
+            Map.tiles = Res('dc-dngn.png', TILESIZE)
+
     
     @staticmethod
     def Random():
-        startx = 80
-        starty = 40
+        startx = 60
+        starty = 60
         somename = dMap()
-        somename.makeMap(startx, starty, 110, 50, 60)
+        #size 50 x 50, a low (10) chance of making new rooms with a 50% chance new rooms will be corridors, and a maximum of 20 rooms.
+        somename.makeMap(startx, starty, 10, 30, 4)
         array = [] 
         for y in range(0, starty):
             line = []
@@ -53,12 +64,19 @@ class Map(object):
                 if somename.mapArr[y][x] == 0: #floor
                     line.append(0)
                 if somename.mapArr[y][x] == 1: #void
-                    line.append(-1)
+                    line.append(9)
                 if somename.mapArr[y][x] == 2: #wall
                     line.append(1)
                 if somename.mapArr[y][x] == 3 or somename.mapArr[y][x] == 4 or somename.mapArr[y][x] == 5: #door
                     line.append(2)
             array.append(line)
+        
+        
+        #for line in array:
+        #    l=''
+        #    for s in line:
+        #        l=l+str(s)
+        #    print l    
         return Map(array)
     
     def get_random_pos(self):
@@ -83,4 +101,5 @@ class Map(object):
         return False
         
     def get_tile_at(self, x, y):
+        self.check_tiles()
         return self.tiles.get(self.map_array[y][x][MT_IMAGE])

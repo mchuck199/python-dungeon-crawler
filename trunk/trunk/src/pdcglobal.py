@@ -35,7 +35,7 @@ F_LIT = 1024
 F_SML_LIT = 2048
 F_MEMO = 4096
 
-MAP_TILE_void = -1, 0, 0
+MAP_TILE_void = 9, 0, 0
 MAP_TILE_floor = 0, 30, F_WALKABLE | F_FLYABLE
 MAP_TILE_wall = 1, 9 , F_BLOCKSIGHT | F_DIGABLE
 MAP_TILE_door = 2, 32, F_WALKABLE | F_FLYABLE
@@ -97,4 +97,4 @@ class Debug():
         if MES_SYS:
             if Debug.game_instance != None:
                 Debug.game_instance.message_queue.insert(0, '[DEBUG-MESSGAE:] ' + text)
-            print text
+            #print text

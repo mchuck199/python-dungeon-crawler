@@ -1,11 +1,18 @@
-from pygame import *
 import pygame
 import random
 import os
+
+from pygame import *
+from ai import *
 from pdcglobal import *
 from key_mapping import *
 from shadowcast import *
-
+from camera import *
+from dungeon.map import *
+from item import *
+from actor import *
+from populator import *
+        
 class Engine(object):
     def __init__(self):
         self.message_queue = []
@@ -24,44 +31,41 @@ class Engine(object):
         self.screen = pygame.display.set_mode((800, 600))
         self.load_font()
         
-        from dungeon.map import Map, testmap
-        from item import *
-        from actor import Actor, Player
-        from npc import *
+        self.__set_game_instance()
+                
+        #self.map = Map(testmap)
         
+        self.camera = Camera(15, 18)
+        self.map = Map.Random()
+        
+        self.clock = pygame.time.Clock()
+        
+        Populator.fill(self.map, 'easy_ones', 1, 5)
+        
+        self.sc = sc(self.map.map_array)
+        self.player = Humanoid(True)
+        self.player.cloak = Cloak()
+        self.player.left = Flail()
+        self.player.x, self.player.y = self.map.get_random_pos()
+        
+    
+    def __set_game_instance(self):
         Map.game = self
         Actor.game = self
         Item.game = self
         AI.game = self
-                
-        self.map = Map(testmap)
-        self.sc = sc(self.map.map_array)
-        #self.map = Map.Random()
-        self.player = Player()
-        self.player.cloak = Cloak()
-        self.player.left = Flail()
-        self.player.x, self.player.y = self.map.get_random_pos()
-        Slug()
-        #self.actors.append(self.player)
-        #self.actors.append(Slug())
-        #self.actors.append(FloatingEye())
+        Camera.game = self
+        Populator.game = self
         
-        self.xoff = 0
-        self.yoff = 0 
-        self.buffer = False
-    
     def re_init(self):
         Debug.debug('re_init')
         self.quit_loop = False
         self.quit_mes = QUIT
         if hasattr(self, 'map'):
             self.map.cur_surf = None
-                
-        from dungeon.map import Map
-        from actor import Actor, Player
         
-        Map.game = self
-        Actor.game = self
+        self.__set_game_instance()        
+        
     def load_font(self):
         self.std_font = pygame.font.Font(os.path.join('font', 'jesaya.ttf'), 14)    
     def start(self):
@@ -131,25 +135,36 @@ class Engine(object):
             self._world_move()
             self._world_draw()
             self._world_input()
-            
+            self.clock.tick(40)
         self.std_font = None
         return self.quit_mes
     def _world_input(self):
         for e in pygame.event.get():
             self.quit_loop = e.type == pygame.QUIT 
             
-            if e.type == pygame.KEYDOWN:
-                self.__handle_keydown(e.key)
+            #if e.type == pygame.KEYDOWN:
+            #    self.__handle_keydown(e.key)
+                
+        pygame.event.pump()
+        keys=pygame.key.get_pressed()
+        
+        [self.__repeat_key(key) for key in MOVES if keys[key]]
+
+    def __repeat_key(self,key):
+        self.__handle_keydown(key)
+        pygame.time.wait(75)
+        
     def _world_move(self):
         
         #actors with lowest timer first
         self.actors.sort(self.__sort_by_time)
         
         #for act in self.actors:
-            #print act.name,act.timer
+        #    print act.name,act.timer
         
         #wait for player input
-        if self.player.timer <= 0: return
+        if self.player.timer <= 0: 
+            return
         
         diff = self.actors[0].timer
         self.time += diff
@@ -166,10 +181,12 @@ class Engine(object):
                 actor.timer -= diff
             else:
                 actor.act()
+                
     def _world_draw(self):
+        self.camera.adjust(self.player.x, self.player.y)
         self.screen.fill((0, 0, 0))
-        self.screen.blit(self.__get_map_surface(), (0 + self.xoff, 0 + self.yoff))
-        [self.screen.blit(self.__get_actor_surface(act), (act.x * TILESIZE + self.xoff, act.y * TILESIZE + self.yoff)) for act in self.actors if self.sc.lit(act.x, act.y) or act == self.player]
+        self.screen.blit(self.__get_map_surface(), (0 - self.camera.x * TILESIZE, 0 - self.camera.y * TILESIZE))
+        [self.screen.blit(self.__get_actor_surface(act), (act.x * TILESIZE - self.camera.x * TILESIZE, act.y * TILESIZE - self.camera.y * TILESIZE)) for act in self.actors if self.sc.lit(act.x, act.y) or act == self.player]
         self.screen.blit(self.__get_message_surface(), (0, 600 - 128))
         self.screen.blit(self.__get_statblock_surface(), (800 - 192, 0))
         pygame.display.flip()
@@ -292,16 +309,7 @@ class Engine(object):
         
         if key in MOVES:
             self.player.move(key)
-        
-        if key == pygame.K_DOWN:
-            self.yoff -= TILESIZE
-        if key == pygame.K_UP:
-            self.yoff += TILESIZE
-        if key == pygame.K_LEFT:
-            self.xoff += TILESIZE
-        if key == pygame.K_RIGHT:
-            self.xoff -= TILESIZE
-        
+      
         #test
         if key == MOVE_WAIT:
             self.message_queue.insert(0, random.choice(['Au!', 'Ouch..', 'Woot!!', 'Bah!!']))

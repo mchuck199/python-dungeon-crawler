@@ -5,8 +5,8 @@ import pygame
 
 class Item(object):
     
-    eq_tiles = Res('dc-pl.png', TILESIZE)
-    dd_tiles = Res('dc-item.png', TILESIZE)
+    eq_tiles = None
+    dd_tiles = None
     
     game = None
     
@@ -21,8 +21,18 @@ class Item(object):
         self.av = 0
         self.min_damage = 1
         self.max_damage = 2
+
+    def check_tiles(self):
+        if Item.eq_tiles == None:
+            Item.eq_tiles = Res('dc-pl.png', TILESIZE)
+        
+        if Item.dd_tiles == None:
+            Item.dd_tiles = Res('dc-item.png', TILESIZE)
+
         
     def get_eq_img(self):
+        self.check_tiles()
+            
         if self.eq_img_c == None:
             if self.eq_img==None:
                 self.eq_img_c = pygame.Surface((1, 1), pygame.SRCALPHA, 32)
@@ -31,6 +41,12 @@ class Item(object):
         return self.eq_img_c
     
     def get_dd_img(self):
+        if Item.eq_tiles==None:
+            Item.eq_tiles = Res('dc-pl.png', TILESIZE)
+    
+        if Item.dd_tiles==None:
+            Item.dd_tiles = Res('dc-item.png', TILESIZE)
+            
         if self.dd_img_c == None:
             if self.dd_img==None:
                 self.dd_img_c = pygame.Surface((1, 1), pygame.SRCALPHA, 32)
