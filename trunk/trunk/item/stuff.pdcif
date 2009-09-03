@@ -1,0 +1,17 @@
+*Cloak
+type=I_CLOAK
+eq_img=45,0
+dd_img=159
+dv=15
+name=Cloak
+flags=IF_EQUIPABLE
+
+*Flail
+type=I_WEAPON
+eq_img=176,1
+dd_img=20
+av=50
+min_damage=2
+max_damage=4
+name=Flail
+flags=IF_EQUIPABLE
