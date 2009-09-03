@@ -48,7 +48,16 @@ class Actor(object):
         self.check_tiles()
         #self.inv_size=8
         self.items = []
-
+        self.spells = []
+    
+    def cast(self, spell):
+        if self.cur_endurance < spell.phys_cost: return False
+        if self.mind < spell.mind_cost: return False
+        self.cur_endurance -= spell.phys_cost
+        self.cur_mind -= spell.mind_cost
+        
+        return spell.cast(self)
+    
     def pick_up(self, item):
         #items = self.game.get_item_at(self.pos)
         self.timer += self.cur_speed
@@ -63,28 +72,28 @@ class Actor(object):
         item.equipped = True
         
         if item.type == I_ARMOR:
-            old=self.armor
-            self.armor=item
+            old = self.armor
+            self.armor = item
         if item.type == I_BOOTS:
-            old=self.boots
-            self.boots=item
+            old = self.boots
+            self.boots = item
         if item.type == I_CLOAK:
-            old=self.cloak
-            self.cloak=item
+            old = self.cloak
+            self.cloak = item
         if item.type == I_HELMET:
-            old=self.head
-            self.head=item
+            old = self.head
+            self.head = item
         if item.type == I_SHIELD:
-            old=self.right
-            self.right=item
+            old = self.right
+            self.right = item
         if item.type == I_WEAPON:
-            old=self.left
-            self.left=item
+            old = self.left
+            self.left = item
         
         if not old.type == I_VOID:
-            old.equipped=False
+            old.equipped = False
             self.items.append(old)
-        self.cur_surf=None
+        self.cur_surf = None
         Debug.debug('%s equipped %s' % (self.name, item.name))
 
     def clear_surfaces(self):
@@ -146,7 +155,22 @@ class Actor(object):
 
     def tick(self):
         if self.cur_endurance < self.endurance:
-            self.cur_endurance += 1
+            self.cur_endurance += 3
+        if self.cur_endurance > self.endurance:
+            self.cur_endurance -= 1
+        
+        if self.cur_mind < self.mind:
+            self.cur_mind += 1
+        if self.cur_mind > self.mind:
+            self.cur_mind -= 1
+        
+        if self.cur_health > self.health:
+            self.cur_health -= 1
+        
+        if self.cur_speed > self.speed:
+            self.cur_speed -= 1 
+        if self.cur_speed < self.speed:
+            self.cur_speed += 1
             
     def act(self):
         if self.ai != None:

@@ -2,11 +2,12 @@ import pygame, os, random
 
 TILESIZE = 32
 
-MES_SYS = True
+MES_SYS = False # #True
 
 #colors
 WHITE = 255, 255, 255
 GREEN = 0, 255, 0
+
 #maptiles
 MT_INDEX = 0
 MT_IMAGE = 1
@@ -25,7 +26,7 @@ I_HELMET = 32
 S_RUN = 1
 S_PLAYER_PICK_UP = 2
 S_PLAYER_EQUIP = 4
-
+S_PLAYER_CAST = 8
 
 #quit messages
 QUIT = 1
@@ -44,24 +45,27 @@ IF_EATABLE = 4
 #map-tile flags
 F_WALKABLE = 1
 F_FLYABLE = 2
-F_SWIMABLE = 4
+#F_SWIMABLE = 4
 F_BLOCKSIGHT = 8
-F_WALK_D = 16
-F_FLY_D = 32
-F_SWIN_D = 64
+#F_WALK_D = 16
+#F_FLY_D = 32
+#F_SWIN_D = 64
 F_SC_UP = 128
 F_SC_DOWN = 256
 F_DIGABLE = 512
-F_LIT = 1024
-F_SML_LIT = 2048
+#F_LIT = 1024
+#F_SML_LIT = 2048
 F_MEMO = 4096
 
 MAP_TILE_void = 9, 0, 0
 MAP_TILE_floor = 0, 30, F_WALKABLE | F_FLYABLE
 MAP_TILE_wall = 1, 9 , F_BLOCKSIGHT | F_DIGABLE
 MAP_TILE_door = 2, 32, F_WALKABLE | F_FLYABLE
+MAP_TILE_down = 3, 42 , F_WALKABLE | F_SC_DOWN | F_FLYABLE
+MAP_TILE_up = 4, 43 , F_WALKABLE | F_SC_UP | F_FLYABLE
   
-MAP_TILE_LIST = [MAP_TILE_void, MAP_TILE_floor, MAP_TILE_wall, MAP_TILE_door]
+MAP_TILE_LIST = [MAP_TILE_void, MAP_TILE_floor, MAP_TILE_wall,
+                 MAP_TILE_door, MAP_TILE_down, MAP_TILE_up]
 
 def d(side):
     return random.randint(1, side)

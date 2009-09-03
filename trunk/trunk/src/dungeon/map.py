@@ -56,7 +56,7 @@ class Map(object):
         starty = 60
         somename = dMap()
         #size 50 x 50, a low (10) chance of making new rooms with a 50% chance new rooms will be corridors, and a maximum of 20 rooms.
-        somename.makeMap(startx, starty, 10, 30, 10)
+        somename.makeMap(startx, starty, 20, 20, 15)
         array = [] 
         for y in range(0, starty):
             line = []
@@ -71,13 +71,18 @@ class Map(object):
                     line.append(2)
             array.append(line)
         
+        map = Map(array)
+        x, y = map.get_random_pos()
+        map.map_array[y][x] = MAP_TILE_down
+        x, y = map.get_random_pos()
+        map.map_array[y][x] = MAP_TILE_up
         
         #for line in array:
         #    l=''
         #    for s in line:
         #        l=l+str(s)
         #    print l    
-        return Map(array)
+        return map
     
     def get_random_pos(self):
         pos = None
@@ -102,4 +107,7 @@ class Map(object):
         
     def get_tile_at(self, x, y):
         self.check_tiles()
-        return self.tiles.get(self.map_array[y][x][MT_IMAGE])
+        if self.map_array[y][x][MT_IMAGE] == 3:
+            print 'sdasd'
+        img = self.tiles.get(self.map_array[y][x][MT_IMAGE])
+        return img
