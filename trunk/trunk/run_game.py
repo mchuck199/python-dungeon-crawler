@@ -26,7 +26,10 @@
 
 import sys
 import os
-import pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 import gzip
 import pygame
 

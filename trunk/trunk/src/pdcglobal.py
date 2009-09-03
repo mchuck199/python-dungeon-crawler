@@ -1,17 +1,33 @@
-import pygame,os,random
+import pygame, os, random
 
 TILESIZE = 32
 
 MES_SYS = True
 
 #colors
-WHITE=255,255,255
-GREEN=0,255,0
+WHITE = 255, 255, 255
+GREEN = 0, 255, 0
 #maptiles
 MT_INDEX = 0
 MT_IMAGE = 1
 MT_FLAGS = 2
 
+#item_types
+I_VOID = 0
+I_WEAPON = 1
+I_SHIELD = 2
+I_CLOAK = 4
+I_ARMOR = 8
+I_BOOTS = 16
+I_HELMET = 32
+
+#game_states
+S_RUN = 1
+S_PLAYER_PICK_UP = 2
+S_PLAYER_EQUIP = 4
+
+
+#quit messages
 QUIT = 1
 SAVE = 2
 
@@ -19,6 +35,11 @@ SAVE = 2
 MM_WALK = 1
 MM_FLY = 2
 MM_SWIM = 4
+
+#item-flags
+IF_EQUIPABLE = 1
+IF_QUAFFABLE = 2
+IF_EATABLE = 4
 
 #map-tile flags
 F_WALKABLE = 1
@@ -43,9 +64,9 @@ MAP_TILE_door = 2, 32, F_WALKABLE | F_FLYABLE
 MAP_TILE_LIST = [MAP_TILE_void, MAP_TILE_floor, MAP_TILE_wall, MAP_TILE_door]
 
 def d(side):
-    return random.randint(1,side)
+    return random.randint(1, side)
 
-def line(x,y,x2,y2):
+def line(x, y, x2, y2):
     """Brensenham line algorithm"""
     steep = 0
     coords = []
@@ -57,19 +78,19 @@ def line(x,y,x2,y2):
     else: sy = -1
     if dy > dx:
         steep = 1
-        x,y = y,x
-        dx,dy = dy,dx
-        sx,sy = sy,sx
+        x, y = y, x
+        dx, dy = dy, dx
+        sx, sy = sy, sx
     d = (2 * dy) - dx
-    for i in range(0,dx):
-        if steep: coords.append((y,x))
-        else: coords.append((x,y))
+    for i in range(0, dx):
+        if steep: coords.append((y, x))
+        else: coords.append((x, y))
         while d >= 0:
             y = y + sy
             d = d - (2 * dx)
         x = x + sx
         d = d + (2 * dy)
-    coords.append((x2,y2))
+    coords.append((x2, y2))
     return coords
 
 def load_image(name):

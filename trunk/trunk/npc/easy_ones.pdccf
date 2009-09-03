@@ -18,13 +18,13 @@ ai=ChasePlayerAI
 name=Purple Fungus
 
 *BlueFungus
-image=146
+image=145
 speed=600
 ai=ChasePlayerAI
 name=Blue Fungus
 
 *BrownPudding
-image=147
+image=146
 speed=600
 ai=ChasePlayerAI
 name=Brown Pudding 

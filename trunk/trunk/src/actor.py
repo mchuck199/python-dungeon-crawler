@@ -15,12 +15,12 @@ class Actor(object):
         self.name = 'Generic Actor'
         self.cur_surf = None
         self.img_body = None
-        self.cloak = Item()
-        self.armor = Item()
-        self.boots = Item()
-        self.right = Item()
-        self.left = Item()
-        self.head = Item()
+        self.cloak = Item(False)
+        self.armor = Item(False)
+        self.boots = Item(False)
+        self.right = Item(False)
+        self.left = Item(False)
+        self.head = Item(False)
 
         self.natural_dv = 10
         self.natural_av = 0
@@ -46,6 +46,56 @@ class Actor(object):
         self.cur_health = 30
 
         self.check_tiles()
+        #self.inv_size=8
+        self.items = []
+
+    def pick_up(self, item):
+        #items = self.game.get_item_at(self.pos)
+        self.timer += self.cur_speed
+        self.items.append(item)
+        self.game.items.remove(item)
+        item.picked_up = True
+        Debug.debug('%s picked up %s' % (self.name, item.name))
+
+    def equip(self, item):
+        self.timer += self.cur_speed
+        self.items.remove(item)
+        item.equipped = True
+        
+        if item.type == I_ARMOR:
+            old=self.armor
+            self.armor=item
+        if item.type == I_BOOTS:
+            old=self.boots
+            self.boots=item
+        if item.type == I_CLOAK:
+            old=self.cloak
+            self.cloak=item
+        if item.type == I_HELMET:
+            old=self.head
+            self.head=item
+        if item.type == I_SHIELD:
+            old=self.right
+            self.right=item
+        if item.type == I_WEAPON:
+            old=self.left
+            self.left=item
+        
+        if not old.type == I_VOID:
+            old.equipped=False
+            self.items.append(old)
+        self.cur_surf=None
+        Debug.debug('%s equipped %s' % (self.name, item.name))
+
+    def clear_surfaces(self):
+        self.cur_surf = None
+        Actor.tiles = None
+        self.cloak.clear_surfaces()
+        self.armor.clear_surfaces()
+        self.boots.clear_surfaces()
+        self.right.clear_surfaces()
+        self.left.clear_surfaces()
+        self.head.clear_surfaces()
 
     def check_tiles(self):
         if Actor.tiles == None:
@@ -74,7 +124,6 @@ class Actor(object):
         self.check_tiles()
         
         surf = pygame.Surface((TILESIZE, TILESIZE), pygame.SRCALPHA, 32)        
-        
         surf.blit(self.cloak.get_eq_img(), (0, 0))
         surf.blit(self.tiles.get_subs(self.img_body), (0, 0))
 
@@ -86,6 +135,10 @@ class Actor(object):
         surf.blit(self.head.get_eq_img(), (TILESIZE / 4, 0))
         
         return surf
+
+    def pos(self):
+        return self.x, self.y
+    
 
     def set_pos(self, pos):
         self.x = pos[0]
@@ -145,7 +198,6 @@ class Actor(object):
         elif result:
             self.x, self.y = new_pos[0], new_pos[1]
             self.timer += self.cur_speed
-            self.game.map.cur_surf = None
             return True
         
         return False
@@ -154,8 +206,8 @@ class Humanoid(Actor):
     
     tiles = None
 
-    def __init__(self,add):
-        Actor.__init__(self,add)
+    def __init__(self, add):
+        Actor.__init__(self, add)
         self.check_tiles()
         self.img_body = 1, 0
         self.name = 'Player'
