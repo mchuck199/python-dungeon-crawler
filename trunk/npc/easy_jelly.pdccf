@@ -1,0 +1,28 @@
+*PurpleJelly
+image=144
+speed=500:600:700
+ai=ChasePlayerAI
+name=Purple Jelly
+dv_fx=SplitEffect,40
+hp=15,35
+natural_dv=20 
+damage=1,3:2,4
+
+*BlueJelly
+image=145
+speed=500:600:700
+ai=ChasePlayerAI
+name=Blue Jelly
+dv_fx=FrostEffect,20
+hp=15,35
+natural_dv=20
+damage=1,3:2,4
+
+*BrownPudding
+image=146
+speed=500:600:700
+ai=ChasePlayerAI
+name=Brown Pudding 
+hp=15,35
+damage=1,3:2,4
+natural_dv=40

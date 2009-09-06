@@ -1,0 +1,105 @@
+################
+# Random Stuff #
+################
+
+*RandomBook
+name=Book
+type=I_STUFF
+img=0,0,282:0,0,283:0,0,284:0,0,285:0,0,286:0,0,287:0,0,288:0,0,289:0,0,290:0,0,291:0,0,292:0,0,293:0,0,294:0,0,295:0,0,296:0,0,297:0,0,298:0,0,299:0,0,300:0,0,301:0,0,302:0,0,303:0,0,304:0,0,305:0,0,306:0,0,307:0,0,308:0,0,309:0,0,310:0,0,311:0,0,312:0,0,313:0,0,314
+read=Random
+flags=IF_READABLE
+info=A used Book:A little Book:Something to read:An old Book
+
+
+###########
+# Potions #
+###########
+
+*PotionOfEndurance
+name=Potion of Endurance
+type=I_STUFF
+img=0,0,268
+potion=Endurance
+flags=IF_DRINKABLE
+info=Recovers Endurance
+
+*PotionOfClearMind
+name=Potion of Clear Mind
+type=I_STUFF
+img=0,0,269
+potion=Mind
+flags=IF_DRINKABLE
+info=Recovers Mind
+
+*PotionOfTheSpellcaster
+name=Potion of the Spellcaster
+type=I_STUFF
+img=0,0,270
+potion=Spellcaster
+flags=IF_DRINKABLE
+info=Recovers Endurance and Mind
+
+*PotionOfHealing
+name=Potion of Healing
+type=I_STUFF
+img=0,0,271
+potion=Healing
+flags=IF_DRINKABLE
+info=Recovers Health
+
+#########
+# Stuff #
+#########
+
+*Gold
+name=Gold
+type=I_GOLD
+img=0,0,344
+amount=1,80
+
+###########
+# Weapons #
+###########
+
+*Flail
+name=Flail
+type=I_WEAPON
+img=176,1,20:173,2,19:175,1,18:174,1,18
+av=20:30:40:50:60
+damage=1,5:2,4:3,4:3,6
+flags=IF_EQUIPABLE
+pre=SmallBeggars:SmallRusty:SmallBrutal
+suf=SmallOfBattle:SmallOfMaster:SmallBull
+dt=D_BLUDGE
+
+*Scythe
+name=Scythe
+type=I_WEAPON
+img=192,2,2
+av=20:30:40:50
+damage=1,5:1,7:1,9:1,12
+flags=IF_EQUIPABLE
+pre=SmallBeggars:SmallRusty:SmallBrutal
+suf=SmallOfBattle:SmallOfMaster:SmallRedRain
+DT=D_SLASH
+
+#########
+# Armor #
+#########
+
+*Cloak
+type=I_CLOAK
+img=45,0,159:46,0,158:47,0,159
+dv=5:7:12:15
+name=Cloak
+flags=IF_EQUIPABLE
+suf=LesserProtection
+
+*Chainmail
+type=I_ARMOR
+img=115,2,120:  121,2,121:  121,1,122:  120,2,123: 116,1,124
+dv=20:25:30:35:40
+name=Chainmail
+flags=IF_EQUIPABLE
+suf=LesserProtection
+
