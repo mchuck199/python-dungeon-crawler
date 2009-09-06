@@ -24,14 +24,20 @@
 #       You can find the original tileset at:
 #       http://rltiles.sf.net
 
+
+
 import sys
 import os
+import gzip
+import pygame
+
+if '--profile' in sys.argv:
+    import cProfile as profile
+
 try:
     import cPickle as pickle
 except:
     import pickle
-import gzip
-import pygame
 
 try:
     import psyco
@@ -46,24 +52,31 @@ import engine
 from pdcglobal import *
 
 pygame.init()
-screen = pygame.display.set_mode((800, 600))
+screen = pygame.display.set_mode((1024, 768))
 
-if os.access('save.gz', os.F_OK):
-    FILE=gzip.open('save.gz', 'r')
-    game = pickle.load(FILE)
-    game.screen=screen
-    game.load_font()
-    game.re_init()
-    FILE.close()
-else:   
+if not '--newgame' in sys.argv:
+    if os.access('save.gz', os.F_OK):
+        FILE = gzip.open('save.gz', 'r')
+        game = pickle.load(FILE)
+        game.screen = screen
+        game.load_font()
+        game.re_init()
+        FILE.close()
+    else:   
+        game = engine.Engine()
+else:
     game = engine.Engine()
+    
+s = game.start
 
-
-quit_mes = game.start()
+if '--profile' in sys.argv:
+    profile.run('quit_mes = s()')
+else:
+    quit_mes = s()
 
 if quit_mes == SAVE:
     data = game 
-    FILE=gzip.open('save.gz', 'w')
+    FILE = gzip.open('save.gz', 'w')
     pickle.dump(data, FILE, 2)
     FILE.close()
 
