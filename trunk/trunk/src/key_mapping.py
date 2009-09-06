@@ -34,6 +34,15 @@ GAME_SAVE_QUIT = pygame.K_F8
 ACTION_EQUIP = pygame.K_e
 ACTION_PICKUP = pygame.K_PERIOD
 ACTION_CAST = pygame.K_c
-
 ACTION_DOWNSTAIRS = pygame.K_LESS
 ACTION_UPSTAIRS = pygame.K_y
+ACTION_TAKE_OFF = pygame.K_t
+ACTION_DROP = pygame.K_d
+
+PLAYER_ACTIONS = {ACTION_PICKUP: 'pick_up',
+                  ACTION_EQUIP: 'equip',
+                  ACTION_CAST:'cast',
+                  ACTION_DOWNSTAIRS: 'downstairs',
+                  ACTION_UPSTAIRS: 'upstairs',
+                  ACTION_TAKE_OFF: 'take_off',
+                  ACTION_DROP: 'drop' }

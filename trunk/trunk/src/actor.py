@@ -33,6 +33,8 @@ class Actor(object):
         self.timer = 0
         self.ai = None
         
+        self.gold = 0
+        
         self.xp = 0
         self.strength = 100
         self.cur_strength = 100
@@ -49,6 +51,39 @@ class Actor(object):
         #self.inv_size=8
         self.items = []
         self.spells = []
+
+        self.fx = []
+
+#        self.skills = {'Combat (Melee)':1,
+#                       'Combat (Range)':4,
+#                       'Evading':2,
+#                       'Trap-Finding':0,
+#                       'Magic (Order)':4,
+#                       'Magic (Chaos)':3,
+#                       'Magic (Spirit)':2,
+#                       'Magic (Matter)':3}
+
+    def take_off(self, item):
+        if item.type == I_ARMOR:
+            self.armor = Item(False)
+        if item.type == I_BOOTS:
+            self.boots = Item(False)
+        if item.type == I_CLOAK:
+            self.cloak = Item(False)
+        if item.type == I_HELMET:
+            self.head = Item(False)
+        if item.type == I_SHIELD:
+            self.right = Item(False)
+        if item.type == I_WEAPON:
+            self.left = Item(False)
+        self.cur_surf = None
+        self.items.append(item)
+        item.equipped = False
+    
+    def drop(self, item):
+        self.items.remove(item)
+        self.game.items.append(item)
+        item.picked_up = False
     
     def cast(self, spell):
         if self.cur_endurance < spell.phys_cost: return False
@@ -58,10 +93,21 @@ class Actor(object):
         
         return spell.cast(self)
     
+    def get_equipment(self):
+        return [item for item in (self.cloak,
+                                  self.armor,
+                                  self.boots,
+                                  self.right,
+                                  self.left,
+                                  self.head) if not item.type == I_VOID]
+    
     def pick_up(self, item):
         #items = self.game.get_item_at(self.pos)
         self.timer += self.cur_speed
-        self.items.append(item)
+        if item.type == I_GOLD:
+            self.gold += item.amount
+        else:
+            self.items.append(item)
         self.game.items.remove(item)
         item.picked_up = True
         Debug.debug('%s picked up %s' % (self.name, item.name))
@@ -111,7 +157,13 @@ class Actor(object):
             Actor.tiles = Res('dc-mon.png', TILESIZE)
     
     def die(self):
-        self.game.actors.remove(self)
+        if self in self.game.actors:
+            self.game.actors.remove(self)
+        if d(20) < 13:
+            self.__drop_corpse()
+        
+    def __drop_corpse(self):
+        Corpse(self)
         
     def get_std_av(self):
         return self.cloak.av + self.armor.av + self.boots.av + self.right.av + self.left.av + self.head.av + self.natural_av
@@ -154,8 +206,14 @@ class Actor(object):
         self.y = pos[1]
 
     def tick(self):
+        
+        for e in self.fx:
+            e.tick()
+        
         if self.cur_endurance < self.endurance:
             self.cur_endurance += 3
+            if self.cur_endurance > self.endurance:
+                self.cur_endurance = self.endurance
         if self.cur_endurance > self.endurance:
             self.cur_endurance -= 1
         
@@ -217,11 +275,23 @@ class Actor(object):
         
         result = Actor.game.is_move_valid(self, pos, new_pos, self.move_mode)     
         if isinstance(result, Actor):
-            self.game.attack(self, result)
-            self.timer += self.cur_speed
+            if result != self:
+                self.game.attack(self, result)
+                self.timer += self.cur_speed
+                return result
+            else:
+                self.timer += self.cur_speed
+                return True
         elif result:
             self.x, self.y = new_pos[0], new_pos[1]
             self.timer += self.cur_speed
+            [item.set_pos(self.pos()) for item in (self.cloak,
+                                                   self.armor,
+                                                   self.boots,
+                                                   self.right,
+                                                   self.left,
+                                                   self.head)]
+            [item.set_pos(self.pos()) for item in self.items]
             return True
         
         return False

@@ -2,11 +2,13 @@ import pygame, os, random
 
 TILESIZE = 32
 
-MES_SYS = False # #True
+MES_SYS = False
 
 #colors
 WHITE = 255, 255, 255
 GREEN = 0, 255, 0
+BLACK = 0, 0, 0
+BLUE = 80, 80, 255
 
 #maptiles
 MT_INDEX = 0
@@ -21,12 +23,28 @@ I_CLOAK = 4
 I_ARMOR = 8
 I_BOOTS = 16
 I_HELMET = 32
+I_STUFF = 64
+I_GOLD=128
 
 #game_states
 S_RUN = 1
 S_PLAYER_PICK_UP = 2
-S_PLAYER_EQUIP = 4
-S_PLAYER_CAST = 8
+S_PLAYER_EQUIP = 3
+S_PLAYER_CAST = 4
+S_PLAYER_DROP = 5
+S_PLAYER_TAKE_OFF = 6
+
+CHOOSE_STATES = {S_PLAYER_PICK_UP:'Choose an item to pick up:',
+                 S_PLAYER_EQUIP:'Choose an item to equip:',
+                 S_PLAYER_CAST:'Choose a spell to cast:',
+                 S_PLAYER_TAKE_OFF:'Choose an item to take off:',
+                 S_PLAYER_DROP:'Choose an item to drop:'}
+
+STATE_WORKER = {S_PLAYER_PICK_UP:'pickup',
+                 S_PLAYER_EQUIP:'equip',
+                 S_PLAYER_CAST:'cast',
+                 S_PLAYER_TAKE_OFF:'take_off',
+                 S_PLAYER_DROP:'drop'}
 
 #quit messages
 QUIT = 1
@@ -58,8 +76,8 @@ F_DIGABLE = 512
 F_MEMO = 4096
 
 MAP_TILE_void = 9, 0, 0
-MAP_TILE_floor = 0, 30, F_WALKABLE | F_FLYABLE
-MAP_TILE_wall = 1, 9 , F_BLOCKSIGHT | F_DIGABLE
+MAP_TILE_floor = 0, 1, F_WALKABLE | F_FLYABLE
+MAP_TILE_wall = 1, 8 , F_BLOCKSIGHT | F_DIGABLE
 MAP_TILE_door = 2, 32, F_WALKABLE | F_FLYABLE
 MAP_TILE_down = 3, 42 , F_WALKABLE | F_SC_DOWN | F_FLYABLE
 MAP_TILE_up = 4, 43 , F_WALKABLE | F_SC_UP | F_FLYABLE
@@ -96,6 +114,14 @@ def line(x, y, x2, y2):
         d = d + (2 * dy)
     coords.append((x2, y2))
     return coords
+
+def sort_by_time(a, b):
+    return a.timer - b.timer
+
+def get_chars():
+        c = 'abcdefghijklmonpqrstuvwxyz0123456789'
+        for i in xrange(0, 27):
+            yield c[i]
 
 def load_image(name):
         try:

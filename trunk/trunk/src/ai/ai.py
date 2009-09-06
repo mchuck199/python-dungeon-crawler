@@ -12,7 +12,7 @@ class AI(object):
         pass
 
     def seeing_player(self):
-        blocked=False
+        blocked = False
         fields = line(self.actor.x, self.actor.y, self.game.player.x, self.game.player.y)
         for f in fields:
             x, y = f
@@ -21,6 +21,17 @@ class AI(object):
     
     def get_player_direction(self):
         return self.actor.locateDirection(self.game.player)
+    
+    def build_alternate_dirs(self, dir):
+        if dir == MOVE_UP: return [MOVE_UP_LEFT, MOVE_UP_RIGHT]
+        if dir == MOVE_DOWN: return [MOVE_DOWN_LEFT, MOVE_DOWN_RIGHT]
+        if dir == MOVE_LEFT: return [MOVE_UP_LEFT, MOVE_DOWN_LEFT]
+        if dir == MOVE_RIGHT:return [MOVE_UP_RIGHT, MOVE_DOWN_RIGHT]
+        if dir == MOVE_WAIT:return []
+        if dir == MOVE_UP_LEFT:return [MOVE_LEFT, MOVE_UP]
+        if dir == MOVE_DOWN_LEFT:return [MOVE_DOWN, MOVE_LEFT]
+        if dir == MOVE_UP_RIGHT:return [MOVE_UP, MOVE_RIGHT]
+        if dir == MOVE_DOWN_RIGHT:return [MOVE_DOWN, MOVE_RIGHT]
     
     def move_randomly(self):
         list = []

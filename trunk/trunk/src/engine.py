@@ -1,18 +1,21 @@
 import pygame
 import random
 import os
+#import pdb
 
+import magic
+import dungeon 
 from pygame import *
 from ai import AI
 from pdcglobal import *
 from key_mapping import *
 from shadowcast import sc
 from camera import Camera
-from dungeon.map import Map
 from item import Item
 from actor import Actor, Humanoid
 from populator import Populator
-import magic
+from eng_player_actions import *
+from eng_state_worker import *
 from meltdown import *
          
 class Engine(object):
@@ -23,23 +26,26 @@ class Engine(object):
         self.quit_loop = False
         self.quit_mes = QUIT
         self.time = 0    
-        self.camera = Camera(15, 18)
+        self.fow = None
+        self.__cur_stat_surf = None
+        self.player_actions = PlayerActions(self)
+        self.state_worker = StateWorker(self)
+        #self.camera = Camera(15, 18)
+        self.camera = Camera(20, 26)
         self.state = S_RUN
-            
+        
         Debug.init_debug(self)
         Debug.debug('init pygame')
 
         pygame.init()
-        self.screen = pygame.display.set_mode((800, 600))
+        self.screen = pygame.display.set_mode((1024, 768))
         self.clock = pygame.time.Clock()
         
         self.load_font()
         self.__set_game_instance()
                 
         #self.map = Map(testmap)
-        
-
-        
+                
         self.player = Humanoid(True)
         self.player.spells.append(magic.LesserHealing())
         self.player.spells.append(magic.MajorHealing())
@@ -78,9 +84,11 @@ class Engine(object):
         self.actors = []
         self.actors.append(self.player)
         self.items = []
-        self.map = Map.Random()
-        Populator.fill_creatures(self.map, 'easy_ones', 1, 5)
-        Populator.fill_items(self.map, 'stuff', 2, 5)
+        self.map = dungeon.Map.Random()
+        dungeon.Populator.fill_map_with_creatures(self.map, 'easy_ones', 1, 5)
+        #dungeon.Populator.fill_map_with_creatures(self.map, 'random', 1, 5)
+        dungeon.Populator.fill_map_with_creatures(self.map, 'fungi', 1, 5)
+        dungeon.Populator.fill_map_with_items(self.map, 'basic_stuff', 10, 25,20)
         self.sc = sc(self.map.map_array)
         pos = self.get_sc_up_pos()
         self.player.set_pos(pos)
@@ -101,7 +109,7 @@ class Engine(object):
                 self.map.cur_surf = None    
                 items = self.get_items_at(new_pos)
                 if len(items) == 1:
-                    self.message_queue.insert(0, 'you see %s' % (items[0].name))
+                    self.message_queue.insert(0, 'you see a %s' % (items[0].name))
                 if len(items) > 1:
                      self.message_queue.insert(0, 'you see several items here')
         return valid
@@ -119,6 +127,12 @@ class Engine(object):
             vi_adress = 'the ' + victim.name
         
         if attack >= defence:
+            for fx in attacker.left.fx:
+                if d(100) <= fx[1]:
+                    Debug.debug('Applied effect %s to %s by %s' % (fx[0], victim, attacker))
+                    f = fx[0](victim)
+                    f.tick()
+                
             damage = random.randint(attacker.get_total_min_damage(), attacker.get_total_max_damage())
             Debug.debug('Hit for %i damage!' % (damage))
             killed = self.do_damage(victim, damage)
@@ -157,31 +171,12 @@ class Engine(object):
         return [item for item in self.items if item.pos() == pos]
     
     def _game_over(self):
-        image=self.screen
-        
-        # instantiate the Meltdown class
-        meltdown = Meltdown(image)
-    
-        # first step
-        surface, dirty = meltdown.step()
-    
-        # main loop
-        while surface:
-            # event stuff
-            for ev in pygame.event.get():
-                if ev.type in (QUIT, KEYDOWN, MOUSEBUTTONDOWN):
-                    self.quit_loop = True
-                    return
-            
-            # redraw screen
-            self.screen.blit(surface, (0,0))
-            pygame.display.update(dirty)
-            
-            # next step
-            surface, dirty = meltdown.step()
+        print 'You failed'
         self.quit_loop = True
     def _save_quit(self):
         self.clock = None
+        self.fow = None
+        self.__cur_stat_surf = None
         for act in self.actors: act.clear_surfaces()
         for item in self.items: item.clear_surfaces()
 
@@ -189,10 +184,11 @@ class Engine(object):
         self.quit_mes = SAVE
     def _main_loop(self):
         while not self.quit_loop:
-            self.clock.tick(40)
+            #self.clock.tick(40)
             self._world_move()
             self._world_draw()
             self._world_input()
+#            print self.clock.get_fps()
         self.std_font = None
         return self.quit_mes
     def _world_input(self):
@@ -204,6 +200,7 @@ class Engine(object):
                 if e.key == GAME_SAVE_QUIT:
                     self._save_quit()
                 
+                # --- cheat keys >>>
                 if e.key == pygame.K_F1:
                     for line in self.map.map_array:
                         l = ''
@@ -211,85 +208,51 @@ class Engine(object):
                             l = l + str(s[0])
                         print l    
                 
+                if e.key == pygame.K_F2:
+                    self.player.cur_health = 200
+                    self.player.cur_endurance = 5000
+                    self.player.cur_mind = 5000
+                    
+                if e.key == pygame.K_F3:
+                    for item in self.items:
+                        print item.name, item.pos()
+
+                if e.key == pygame.K_F4:                        
+                    for act in self.actors:
+                        print act.name, act.timer
+                                    
+                # <<< cheat keys ---
+                
+                self.__cur_stat_surf = None
+                self.moved = True
+                
                 if self.state == S_RUN:
-                    if e.key == ACTION_PICKUP:
-                        self._player_pick_up()
-                
-                    if e.key == ACTION_EQUIP:
-                        self._player_equip()
-                    
-                    if e.key == ACTION_CAST:
-                        self._player_cast()    
-                    
-                    if e.key == ACTION_DOWNSTAIRS:
-                        x, y = self.player.pos()
-                        if self.map.map_array[y][x][MT_FLAGS] & F_SC_DOWN:
-                            self.random_map()
-                        else:
-                            self.message_queue.insert(0, "You can't go downstairs here")
-                    
-                    if e.key == ACTION_UPSTAIRS:
-                        x, y = self.player.pos()
-                        if self.map.map_array[y][x][MT_FLAGS] & F_SC_UP:
-                            self.random_map()
-                        else:
-                            self.message_queue.insert(0, "You can't go upstairs here")
-                    
-                
-                elif self.state == S_PLAYER_PICK_UP:
-                    if pygame.key.name(e.key) in self._items_to_choose.keys():
-                        item = self._items_to_choose[pygame.key.name(e.key)]
-                        self.player.pick_up(item)
-                        self.message_queue.insert(0, 'You picked up a %s' % (item.name))
-                        _items_to_choose = {}
-                        self.state = S_RUN
-                
-                elif self.state == S_PLAYER_EQUIP:
-                    if pygame.key.name(e.key) in self._items_to_choose.keys():
-                        item = self._items_to_choose[pygame.key.name(e.key)]
-                        self.player.equip(item)
-                        self.message_queue.insert(0, 'You equipped %s' % (item.name))
-                        _items_to_choose = {}
-                        self.state = S_RUN
-                    
-                elif self.state == S_PLAYER_CAST:
-                    if pygame.key.name(e.key) in self._items_to_choose.keys():
-                        spell = self._items_to_choose[pygame.key.name(e.key)]
-                        if self.player.cur_endurance > spell.phys_cost:
-                            if self.player.cur_mind > spell.mind_cost:
-                                self.player.cast(spell)
-                                self.message_queue.insert(0, 'You cast %s' % (spell.name))
-                            else:
-                                self.message_queue.insert(0, "You don't have enough mind to cast %s" % (spell.name))
-                        else:
-                            self.message_queue.insert(0, "You don't have enough endurance to cast %s" % (spell.name))
-                        _items_to_choose = {}
-                        self.state = S_RUN
+                    if e.key in PLAYER_ACTIONS: 
+                        self.player_actions.__getattribute__(PLAYER_ACTIONS[e.key])()
+
+                elif self.state in STATE_WORKER:
+                    self.state_worker.__getattribute__(STATE_WORKER[self.state])(e.key)
                     
         if self.state == S_RUN:
             pygame.event.pump()
             keys = pygame.key.get_pressed()
-            [self.__repeat_key(key) for key in MOVES if keys[key]]
+            [self.player.move(key) for key in MOVES if keys[key] and self.player.timer <= 0]
     def _world_move(self):
-        
         if self.state == S_RUN:
             
             self.sc.do_fov(self.player.x, self.player.y, self.player.mind / 20 + 5)
             
             #actors with lowest timer first
-            self.actors.sort(self.__sort_by_time)
-            
-            #for act in self.actors:
-            #    print act.name,act.timer
-            
+            self.actors.sort(sort_by_time)
             #wait for player input
-            if self.player.timer <= 0: 
-                return
+            #if self.player.timer <= 0: 
+            #    return
             
             diff = self.actors[0].timer
             self.time += diff
             
             #Debug.debug('Worldtime: %s' % (self.time))
+            #pdb.set_trace()
             
             #act-independent issues
             if self.time > 1000:
@@ -302,75 +265,48 @@ class Engine(object):
                 else:
                     actor.act()
     def _world_draw(self):
-        self.camera.adjust(self.player.x, self.player.y)
+        if self.camera.adjust(self.player.x, self.player.y):
+            self.map.cur_surf = None
         self.screen.fill((0, 0, 0))
         self.screen.blit(self.__get_map_surface(), (0 - self.camera.x * TILESIZE, 0 - self.camera.y * TILESIZE))
         
         for item in self.items: 
             if not item.picked_up and (self.sc.lit(item.x, item.y) or self.player.x == item.x and self.player.y == item.y):
-                self.screen.blit(self.__get_item_surface(item), (item.x * TILESIZE - self.camera.x * TILESIZE, item.y * TILESIZE - self.camera.y * TILESIZE))
+                try:
+                    self.screen.blit(self.__get_item_surface(item), (item.x * TILESIZE - self.camera.x * TILESIZE, item.y * TILESIZE - self.camera.y * TILESIZE))
+                except:
+                    item.cur_surf = None
+                    self.screen.blit(self.__get_item_surface(item), (item.x * TILESIZE - self.camera.x * TILESIZE, item.y * TILESIZE - self.camera.y * TILESIZE))
         
         for act in self.actors:
             if self.sc.lit(act.x, act.y) or act == self.player:
                 self.screen.blit(self.__get_actor_surface(act), (act.x * TILESIZE - self.camera.x * TILESIZE, act.y * TILESIZE - self.camera.y * TILESIZE))
                 
-        self.screen.blit(self.__get_message_surface(), (0, 600 - 128))
-        self.screen.blit(self.__get_statblock_surface(), (800 - 192, 0))
+        self.screen.blit(self.__get_message_surface(), (0, 768 - 128))
+        self.screen.blit(self.__get_statblock_surface(), (1024 - 192, 0))
         pygame.display.flip()
-    def _player_cast(self):
-        spells = [spell for spell in self.player.spells]
-        if len(spells) == 0:
-            self.message_queue.insert(0, "You don't know any spells")
-            return
-        gen = self.__get_chars()
-        self._items_to_choose = {}
-        for spell in spells:
-            self._items_to_choose[gen.next()] = spell
-        self.state = S_PLAYER_CAST
-    def _player_equip(self):
-        items = [item for item in self.player.items if item.flags & IF_EQUIPABLE]
-        if len(items) == 0:
-            self.message_queue.insert(0, "You have nothing to equip")
-            return
-        gen = self.__get_chars()
-        self._items_to_choose = {}
-        for item in items:
-            self._items_to_choose[gen.next()] = item
-        self.state = S_PLAYER_EQUIP    
-    def _player_pick_up(self):
-        items = self.get_items_at(self.player.pos())
-        if len(items) == 0:
-            self.message_queue.insert(0, "There's nothing to pickup")
-            return
-        if len(items) == 1:
-            self.player.pick_up(items[0])
-            self.message_queue.insert(0, 'You picked up a %s' % (items[0].name))
-            return
-        gen = self.__get_chars()
-        self._items_to_choose = {}
-        for item in items:
-            self._items_to_choose[gen.next()] = item
-            
-        self.state = S_PLAYER_PICK_UP
-    
-    def __get_chars(self):
-        c = 'abcdefghijklmonpqrstuvwxyz'
-        for i in xrange(0, 27):
-            yield c[i] # did i already told you why i love python?
+
     def __get_map_surface(self):
         if self.map.cur_surf == None:
             surf_map = pygame.Surface((self.map.width * TILESIZE, self.map.height * TILESIZE))
             for x in xrange(self.map.width):
                 for y in xrange(self.map.height):
-                    if (x == self.player.x and y == self.player.y) or self.map.map_array[y][x][MT_FLAGS] & F_MEMO or self.sc.lit(x, y):
-                        blit_position = (x * TILESIZE, y * TILESIZE)
-                        surf_map.blit(self.map.get_tile_at(x, y), blit_position)
-                        
-                        if not self.map.map_array[y][x][MT_FLAGS] & F_MEMO:
-                            tile = self.map.map_array[y][x]
-                            new_tile = tile[0], tile[1], tile[2] ^ F_MEMO
-                            self.map.map_array[y][x] = new_tile
+                    if self.camera.is_in_view(x, y):
+                        pos = (x, y) == self.player.pos() 
+                        lit = self.sc.lit(x, y)
+                        memo = self.map.map_array[y][x][MT_FLAGS] & F_MEMO
+                        if pos or lit or memo:
+                            blit_position = (x * TILESIZE, y * TILESIZE)
+                            surf_map.blit(self.map.get_tile_at(x, y), blit_position)
                             
+                            if not pos and not lit and memo:
+                                surf_map.blit(self.__get_fow(), blit_position)
+                            
+                            if not self.map.map_array[y][x][MT_FLAGS] & F_MEMO:
+                                tile = self.map.map_array[y][x]
+                                new_tile = tile[0], tile[1], tile[2] ^ F_MEMO
+                                self.map.map_array[y][x] = new_tile
+
             self.map.cur_surf = surf_map
         
         return self.map.cur_surf
@@ -387,7 +323,7 @@ class Engine(object):
             item.cur_surf = surf_item
         return item.cur_surf
     def __get_message_surface(self):
-        surf = pygame.Surface((800 - 192, 128))
+        surf = pygame.Surface((1024 - 192, 128))
         surf.fill((120, 120, 0))
         y = 100
         for mes in self.message_queue:
@@ -396,35 +332,27 @@ class Engine(object):
             y -= 20
         return surf
     def __get_statblock_surface(self):
-        surf = pygame.Surface((192, 600))
-        surf.blit(load_image('stat.png'), (0, 0))
-        
-        if self.state == S_RUN:
-            self.__draw_stat_block(surf)    
-        if self.state == S_PLAYER_PICK_UP:
-            self.__draw_item_choose(surf, 'Choose an item to pick up:')
-        if self.state == S_PLAYER_EQUIP:
-            self.__draw_item_choose(surf, 'Choose an item to equip:')
-        if self.state == S_PLAYER_CAST:
-            self.__draw_item_choose(surf, 'Choose a spell to cast:')
-        return surf
-    def __sort_by_time(self, a, b):
-        return a.timer - b.timer
-    def __repeat_key(self, key):
-        pygame.time.wait(75)        
-        if key in MOVES:
-            self.player.move(key)
-            self._world_move()
-        #test
-        if key == MOVE_WAIT:
-            self.message_queue.insert(0, random.choice(['Au!', 'Ouch..', 'Woot!!', 'Bah!!']))
+        if self.__cur_stat_surf == None:
+            surf = pygame.Surface((192, 768))
+            surf.blit(load_image('stat.png'), (0, 0))
+            
+            if self.state == S_RUN:
+                self.__draw_stat_block(surf)    
+
+            if self.state in CHOOSE_STATES:
+                self.__draw_item_choose(surf, CHOOSE_STATES[self.state])
+            
+            self.__cur_stat_surf = surf
+            
+        return self.__cur_stat_surf
+    
     def __set_game_instance(self):
-        Map.game = self
+        dungeon.Map.game = self
         Actor.game = self
         Item.game = self
         AI.game = self
         Camera.game = self
-        Populator.game = self
+        dungeon.Populator.game = self
         magic.Spell.game = self
     
     def __draw_item_choose(self, surf, message):
@@ -434,8 +362,20 @@ class Engine(object):
         abc = self._items_to_choose.keys()
         abc.sort()
         for key in abc:
-            t = self.std_font.render('%s - %s' % (key, self._items_to_choose[key].name), True, WHITE)
-            surf.blit(t, (16, y))
+            item = self._items_to_choose[key]
+            color = WHITE
+            if hasattr(item,'special'):
+                if item.special:
+                    color = GREEN
+            elif hasattr(item,'color'):
+                color=item.color    
+            k = self.std_font.render('%s -' % (key), True, WHITE)
+            t = self.std_font.render('%s' % (item.name), True, color)
+            i = self.std_font.render('%s' % (item.info()), True, color)
+            surf.blit(k, (16, y))
+            surf.blit(t, (32, y))
+            y += 18
+            surf.blit(i, (32, y))
             y += 18
     def __draw_stat_block(self, surf):
         head = load_image('48.png')
@@ -489,6 +429,34 @@ class Engine(object):
             surf.blit(line, (90, y))
             y += 20
 
+        
+        gold=self.std_font.render('Gold:',True,WHITE)
+        amount=self.std_font.render(str(self.player.gold),True,WHITE)
+        surf.blit(gold, (16, 430))
+        surf.blit(amount, (90, 430))
+        
+#        y = 430            
+#        skills= self.player.skills
+#        for skill in skills:
+#            line = self.std_font.render(skill, True, WHITE)
+#            surf.blit(line, (16, y))
+#            y += 20
+#        
+#        y = 430    
+#        for skill in skills:
+#            pr=''
+#            for _ in xrange(skills[skill]): pr+='*'
+#            line = self.std_font.render(pr, True, WHITE)
+#            surf.blit(line, (90, y))
+#            y += 20
+        
+    def __get_fow(self):
+        if self.fow == None:
+            self.fow = pygame.Surface((TILESIZE, TILESIZE))
+            self.fow.fill(BLACK)
+            self.fow.set_alpha(100)
+        return self.fow
+        
     def re_init(self):
         Debug.debug('re_init')
         

@@ -11,21 +11,5 @@ speed=450
 ai=ChasePlayerAI
 name=Floating Eye
 
-*PurpleFungus
-image=145
-speed=600
-ai=ChasePlayerAI
-name=Purple Fungus
 
-*BlueFungus
-image=145
-speed=600
-ai=ChasePlayerAI
-name=Blue Fungus
-
-*BrownPudding
-image=146
-speed=600
-ai=ChasePlayerAI
-name=Brown Pudding 
 
