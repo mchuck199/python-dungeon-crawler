@@ -1,0 +1,41 @@
+#########
+# Stuff #
+#########
+
+*Gold
+type=Gold
+name=Gold
+img=0,0,344
+amount=1,80
+
+#########
+# Boots #
+#########
+
+*Boots
+type=Boots
+img=60,3,170
+dv=1:3:5:7
+name=Boots
+flags=IF_EQUIPABLE
+
+#########
+# Armor #
+#########
+
+*Cloak
+type=Cloak
+img=45,0,159:46,0,158:47,0,159
+dv=5:7:12:15
+name=Cloak
+flags=IF_EQUIPABLE
+suf=LesserProtection
+
+*Chainmail
+type=Armor
+img=115,2,120:  121,2,121:  121,1,122:  120,2,123: 116,1,124
+dv=20:25:30:35:40
+name=Chainmail
+flags=IF_EQUIPABLE
+suf=LesserProtection
+
